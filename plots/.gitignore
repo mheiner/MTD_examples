@@ -1,0 +1,6 @@
+# Ignore everything in this directory
+*.pdf
+*.eps
+*.png
+# Except this file
+!.gitignore

@@ -1,0 +1,6 @@
+*.rda
+*.csv
+*.pdf
+*.eps
+*.png
+.DS_store
