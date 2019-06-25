@@ -27,10 +27,10 @@ const whichdat = ARGS[6]
 using BSON
 using StatsBase
 
-# pkg> add "https://github.com/mheiner/SparseProbVec.jl.git"
+# pkg> add "https://github.com/mheiner/SparseProbVec.jl"
 using SparseProbVec
 
-# pkg> add "https://github.com/mheiner/MTD.jl.git"
+# pkg> add "https://github.com/mheiner/MTD.jl"
 using MTD
 
 using Random

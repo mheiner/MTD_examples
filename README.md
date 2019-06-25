@@ -7,9 +7,9 @@ This folder contains code to reproduce results from the associated article by He
 Before running the .jl scripts, it is necessary to install the packages that appear after all instances of `using` in the .jl scripts. To do this, open the Julia REPL and enter package mode by pressing `]`. In package mode, enter `add` followed by each package name, separated by spaces. The SparseProbVec and MTD packages are unregistered and can be installed with
 
 ```julia
-pkg> add "https://github.com/mheiner/SparseProbVec.jl.git"
+pkg> add "https://github.com/mheiner/SparseProbVec.jl"
 
-pkg> add "https://github.com/mheiner/MTD.jl.git"
+pkg> add "https://github.com/mheiner/MTD.jl"
 ```
 
 Post processing is run with the R scripts, which require the coda package.
