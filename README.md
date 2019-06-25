@@ -24,9 +24,15 @@ The .jl scripts contain various options for prior and MCMC settings/initializati
 
 ## Folders
 
-- BayesFactors: Files reporting Bayes factors (from the .jl scripts) are saved in this folder.
+- BayesFactors: Files reporting Bayes factors (from the .jl scripts) are saved in this folder. Factors are calculated for full, unrestricted Markov chains using the lag configurations listed, and are reported as the ratio of the highest marginal likelihood to the current.
 - data: Contains data.
-- forecast_validation: Files reporting out-of-sample validation metrics (calculated in the GoF sections of .jl scripts) are saved in this folder.
+- forecast_validation: Files reporting out-of-sample validation metrics (calculated in the GoF sections of .jl scripts) are saved in this folder. The metrics are as follows.
+  * L1 loss: Mean (across time points and MCMC iterations) L1 loss of one-step forecast probabilities against observations (a vector of zeros with a one at the index of the observed state).
+  * Misclass rate: Misclassification rate (across time points and MCMC iterations) with respect to highest one-step forecast probabilities.
+  * NLL: Mean (across time points and MCMC iterations) negative log-likelihood of one-step forecast probabilities evaluated at validation observations.
+  * SqErr: Mean (across time points and MCMC iterations) squared error between observed state (as an integer) and its expected value calculated from one-step forecast probabilities. Assumes meaningful ordering of states.
+  * postmean L1 loss, Ptrue: Mean (across time points and MCMC iterations) L1 loss of one-step forecast probabilities against the true probabilities.
+  * L1 loss, Ptrue postmean forec: One-step forecast L1 loss calculated from posterior mean forecast probabilities against the true probabilities. (This is the metric used in the article.)
 - plots: R post processing saves plots in this folder.
 - postsim: Posterior simulations are saved to this folder.
 - postsim_progress: Files reporting MCMC progress and statistics are saved in this folder.

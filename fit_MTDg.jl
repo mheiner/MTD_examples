@@ -52,7 +52,6 @@ end
 
 
 ### Setup
-# const TT = 71
 const SS = S[1:TT]
 println(sort(unique(SS[(L+1):TT])))
 println(counts(SS))
@@ -141,7 +140,6 @@ model = ModMTDg(L, K, TT, SS,
   PriorMTDg(prior_λ, prior_Q0, prior_Q),
   inits)
 
-## Warmup run
 logfilename = "postsim_progress/out_prog_$(mesg).txt"
 timestart = Dates.now()
 
@@ -157,7 +155,7 @@ mcmc!(model, Int(0.85*n_burn), save=false, report_filename=logfilename,
 etr(timestart, n_keep, thin, logfilename)
 
 ### MCMC
-sims = mcmc!(model, n_keep, save=true, report_filenamelogfilename,
+sims = mcmc!(model, n_keep, save=true, report_filename=logfilename,
              thin=thin, jmpstart_iter=10)
 
 ### Output
@@ -176,7 +174,6 @@ sims_llik = [ sims[i][:llik] for i=1:nsim ]
 
 sims_lam = permutedims(hcat([ exp.(sims[i][:lλ]) for i=1:nsim ]...))
 sims_Q0 = permutedims(hcat([ exp.(sims[i][:lQ0]) for i=1:nsim ]...))
-# sims_Q = [ permutedims(hcat([ exp.(vec(sims[i][:lQ][r])) for i=1:nsim]...)) for r in 1:model.L ]
 sims_Q = [ exp(sims[i][:lQ][r][j,jj]) for i=1:nsim, r=1:model.L, j=1:model.K, jj=1:model.K ]
 
 @rput sims_lam sims_Q0 sims_Q sims_llik priorinfo K L TT mesg
@@ -197,17 +194,18 @@ if simdata
     test_indx = 2
 
     report_file = open(report_filename, "a+")
-    nprime = length(y[test_indx])
 
+    nprime = length(y[test_indx])
     niter = length(sims)
     nsim = 2000
 
     Random.seed!(srnd)
     simind = sort(StatsBase.sample(1:niter, nsim, replace=false))
+
     (FL1, MC, NLL, SQE, PL1, FOREC) = meanForecLoss(y[test_indx], X[test_indx][:,1:model.L],
-    P[test_indx], nprime, lossL1, sims,
-    model.TT, model.L, K,
-    simind, modeltype=modeltype)
+        P[test_indx], nprime, lossL1, sims,
+        model.TT, model.L, K,
+        simind, modeltype=modeltype)
 
     PMforec = reshape(mean(FOREC, dims=1), (nprime, K) )
     PML1P = mean(abs.(PMforec .- P[test_indx])) # lower because of Jensen's inequality

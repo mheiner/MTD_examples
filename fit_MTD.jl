@@ -120,7 +120,6 @@ model = ModMTD(L, K, TT, SS,
   PriorMTD(prior_λ, prior_Q),
   inits)
 
-## Warmup run
 logfilename = "postsim_progress/out_prog_$(mesg).txt"
 timestart = Dates.now()
 
@@ -175,16 +174,16 @@ if simdata
     report_file = open(report_filename, "a+")
 
     nprime = length(y[test_indx])
-
     niter = length(sims)
     nsim = 2000
 
     Random.seed!(srnd)
     simind = sort(StatsBase.sample(1:niter, nsim, replace=false))
+
     (FL1, MC, NLL, SQE, PL1, FOREC) = meanForecLoss(y[test_indx], X[test_indx][:,1:model.L],
-    P[test_indx], nprime, lossL1, sims,
-    model.TT, model.L, K,
-    simind, modeltype=modeltype)
+        P[test_indx], nprime, lossL1, sims,
+        model.TT, model.L, K,
+        simind, modeltype=modeltype)
 
     PMforec = reshape(mean(FOREC, dims=1), (nprime, K) )
     PML1P = mean(abs.(PMforec .- P[test_indx])) # lower because of Jensen's inequality
