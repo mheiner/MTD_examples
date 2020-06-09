@@ -13,8 +13,8 @@
 
 # const srnd = 22219
 # const TT = 50
-# const L = 3
-# const R = 2
+# const L = 6
+# const R = 1
 #
 # whichdat = "sim1_sets"
 # whichdat = "sim2_sets"
@@ -81,7 +81,7 @@ symm_prior = symmetricDirPrior_mmtd(1.0, 1.0, 1.0, 1.0, L, R, K, λ_indx)
 π_small_Λ = vcat(0.0, fill(0.25, R-1))
 # π_small_Λ = vcat(0.0, fill(1.0/float(R+1), R-1))
 π_large_Λ = π_small_Λ .* 1.0
-α_Λ = [ 5.0 / 2.0^float(r-1) for r = 1:(R+1) ]
+α_Λ = [ 5.0 / 2.0^float(r-1) for r = 1:(R+1) ] # decreasing alpha when mimicking Dirichlet; currently only used in initialization
 # α_Λ = vcat(float(R), fill(1.0/float(R), R))
 # γ_Λ, δ_Λ = shape_Dir2GenDir(α_Λ)
 γ_Λ = 1.0
@@ -104,7 +104,7 @@ symm_prior = symmetricDirPrior_mmtd(1.0, 1.0, 1.0, 1.0, L, R, K, λ_indx)
 # δc_λ = 1.0
 
 # β_Q = float(TT) / 8.0 # for SDM on Q
-β_Q = float(K) / 2.0
+β_Q = float(K) / 1.0
 
 η_Q = 1.0e3
 π_small_Q = 1.0 / float(K)
@@ -165,16 +165,12 @@ close(bfact_file)
 fieldnames(ParamsMMTD)
 inits = ParamsMMTD(
   SparseProbVec.rDirichlet(α_Λ, logout=true), # Λ
-  # log(Λ), # Λ
   [ SparseProbVec.rDirichlet(symm_prior[2][r], logout=true) for r in 1:R], # λ
-  # [ log(λ[r]) for r in 1:R ], # λ
   [ StatsBase.sample(1:(λ_indx.nZζ+1)) - 1 for i in 1:(TT-L) ], # Zζ
-  # ζ[1:(TT-L),:], # ζ
   SparseProbVec.rDirichlet(prior_Q0, logout=true),
   # [ log(fill(1.0/K, fill(K, r+1)...)) for r in 1:R ] # lQ (const)
   [ reshape(vcat([ SparseProbVec.rDirichlet(ones(K), logout=true) for k in 1:K^(r) ]...), fill(K, r+1)... ) for r in 1:R ] # lQ (rand)
   # [ log( transTens_MLE( count_trans_L(SS, K, r) + 1.0 ) ) for r in 1:R ] # lQ (mle)
-  # [ log(Q[r]) for r in 1:R ] # lQ
   )
 
 ### Create model
@@ -207,6 +203,12 @@ bson("./postsim/mcmc_$(mesg).bson", sims=deepcopy(sims),
     model=deepcopy(model), whichdat=deepcopy(whichdat),
     mesg=deepcopy(mesg))
 
+addDecomp_postsims!(sims, model) # saved before adding decompositions just in case it encounters an error
+
+bson("./postsim/mcmc_$(mesg).bson", sims=deepcopy(sims),
+    model=deepcopy(model), whichdat=deepcopy(whichdat),
+    mesg=deepcopy(mesg))
+
 ### Send simulations to R
 using RCall
 
@@ -226,7 +228,10 @@ sims_lam = [ permutedims(hcat([ exp.(sims[i][:lλ][r]) for i=1:nsim]...)) for r 
 sims_Q0 = permutedims(hcat([ exp.(sims[i][:lQ0]) for i=1:nsim ]...))
 sims_Q = [ permutedims(hcat([ exp.(vec(sims[i][:lQ][r])) for i=1:nsim]...)) for r in 1:R ]
 
-@rput sims_Lam sims_lam sims_Q0 sims_Q sims_llik priorinfo K L R TT lamindx lamlens lamZzetaindx lamNZzeta mesg
+sims_Dlevelwgt = permutedims(hcat([ sims[ii][:Dlevelweight] for ii in 1:nsim ]...)) # decomposition level weights
+sims_Dlaginvolv = permutedims(hcat([ sims[ii][:Dlaginvolv] for ii in 1:nsim ]...)) # decomposition lag weights
+
+@rput sims_Lam sims_lam sims_Q0 sims_Q sims_llik priorinfo K L R TT lamindx lamlens lamZzetaindx lamNZzeta mesg sims_Dlevelwgt sims_Dlaginvolv
 
 R"ls()"
 R"save.image(file=paste0('postsim/mcmc_', $(mesg), '.rda'))"
